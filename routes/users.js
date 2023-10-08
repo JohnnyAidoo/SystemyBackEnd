@@ -1,8 +1,7 @@
 const express = require("express");
 const usersModel = require("../models/users");
 const router = express.Router();
-const { GoogleAuthProvider, signInWithPopup } = require("firebase/auth");
-const auth = require("../firebase");
+const bycript = require("bcrypt");
 
 // get Users
 
@@ -16,6 +15,50 @@ router.get("/", async (req, res) => {
   }
 });
 
+// SignUp user
+
+router.post("/signup", async (req, res) => {
+  email = req.body.email;
+  userName = req.body.userName;
+  password = req.body.password;
+
+  const saltRounds = 10;
+  const hashedPassword = await bycript.hash(password, saltRounds);
+
+  const newUser = new usersModel({
+    email: email,
+    userName: userName,
+    password: hashedPassword,
+  });
+  try {
+    newUser.save().then((response) => {
+      res.json(response);
+    });
+  } catch (err) {
+    res.json(err);
+  }
+});
+
+//login User
+router.post("/signin", (req, res) => {
+  email = req.body.email;
+  password = req.body.password;
+
+  usersModel.findOne({ email: email }).then(async (user) => {
+    if (!user) {
+      res.status(401).json({ message: "User not found" });
+    }
+    if (user) {
+      const match = await bycript.compare(password, user.password);
+      match
+        ? res.status(200).json({ message: "Login success", userId: user.id })
+        : res.status(401).json({ message: "Invalid password" });
+    }
+  });
+});
+
+//TODO update user
+
 // get on user
 
 router.get("/:id", async (req, res) => {
@@ -27,40 +70,17 @@ router.get("/:id", async (req, res) => {
     res.json(err);
   }
 });
-
-// add user
-//todo add password hashing
-
-router.post("/add", (req, res) => {
-  userName = req.body.userName;
-  password = req.body.password;
-
-  const newUser = new usersModel({
-    userName: userName,
-    password: password,
-  });
-  try {
-    newUser.save().then((response) => {
-      res.json(response);
-    });
-  } catch (err) {
-    res.jon(err);
-  }
-});
-
-//TODO update user
-
 //todo google sign in
-router.get("/google", (req, res) => {
-  const provider = new GoogleAuthProvider();
+// router.get("/google", (req, res) => {
+//   const provider = new GoogleAuthProvider();
 
-  signInWithPopup(auth, provider).then((result) => {
-    const credential = GoogleAuthProvider.credentialFromResult(result);
-    const token = credential.accessToken;
+//   signInWithPopup(auth, provider).then((result) => {
+//     const credential = GoogleAuthProvider.credentialFromResult(result);
+//     const token = credential.accessToken;
 
-    const user = result.user;
-    res.json(user);
-  });
-});
+//     const user = result.user;
+//     res.json(user);
+//   });
+// });
 
 module.exports = router;
