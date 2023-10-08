@@ -1,7 +1,8 @@
 const express = require("express");
 const usersModel = require("../models/users");
 const router = express.Router();
-import { GoogleAuthProvider, signInWithPopup, getAuth } from "firebase/auth";
+const { GoogleAuthProvider, signInWithPopup } = require("firebase/auth");
+const auth = require("../firebase");
 
 // get Users
 
@@ -50,9 +51,9 @@ router.post("/add", (req, res) => {
 //TODO update user
 
 //todo google sign in
-router.get("/googleSign", (req, res) => {
+router.get("/google", (req, res) => {
   const provider = new GoogleAuthProvider();
-  const auth = getAuth;
+
   signInWithPopup(auth, provider).then((result) => {
     const credential = GoogleAuthProvider.credentialFromResult(result);
     const token = credential.accessToken;
