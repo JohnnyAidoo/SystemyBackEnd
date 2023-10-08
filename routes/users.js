@@ -43,6 +43,10 @@ router.post("/signup", async (req, res) => {
 router.post("/signin", (req, res) => {
   email = req.body.email;
   password = req.body.password;
+  if (!email || !password) {
+    res.json({ message: "Please enter email and password" });
+    return;
+  }
 
   usersModel.findOne({ email: email }).then(async (user) => {
     if (!user) {
